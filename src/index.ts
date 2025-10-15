@@ -1,79 +1,31 @@
 import type {
     OperationCreateItem,
-    OperationUpdateItem,
     OperationQueryItem,
     OperationFlexibleQuery,
     OperationBulkWrite,
-    OperationBulkOperation,
-    OperationUpdateOne,
     OperationAggregateDto,
-    OperationMatchStageDto,
     OperationRequestOptions,
     OperationDeleteResult,
     OperationUpdateResult,
     OperationInsertResult
 } from './types/operations';
 import type { InventoryItem } from './types/item';
-import { signRequest } from './utils/api-request';
+import { RaukInventoryClient } from './core/client';
 
+export class RaukInventory extends RaukInventoryClient {
+    private static instance: RaukInventory | null = null;
 
-class RaukInventory {
-
-    private readonly apiKeyId: string;
-    private readonly apiSecret: string;
-    private readonly apiPublicKey: string;
-    private readonly apiBaseUrl: string;
-
-    constructor({
-        apiKeyId,
-        apiSecret,
-        apiPublicKey,
-        apiBaseUrl = 'https://inventory.rauk.app',
-    }: {
+    constructor(config: {
         apiKeyId: string;
         apiSecret: string;
         apiPublicKey: string;
         apiBaseUrl?: string;
     }) {
-        if (!apiKeyId || !apiSecret || !apiPublicKey) {
-            throw new Error('apiKeyId, apiSecret and apiPublicKey are required');
+        super(config); // Pass config to RaukInventoryClient
+        if (RaukInventory.instance) {
+            throw new Error('RaukInventory is already initialized. Use the existing instance.');
         }
-
-        this.apiKeyId = apiKeyId;
-        this.apiSecret = apiSecret;
-        this.apiPublicKey = apiPublicKey;
-        this.apiBaseUrl = apiBaseUrl;
-    }
-
-    private async request<T = any>(requestArray: any[]): Promise<T> {
-        const signedRequest = signRequest({
-            apiKeyId: this.apiKeyId,
-            apiSecret: this.apiSecret,
-            apiPublicKey: this.apiPublicKey,
-        }, requestArray);
-
-        try {
-            const response = await fetch(`${this.apiBaseUrl}/query`, {
-                method: 'POST',
-                body: JSON.stringify(requestArray),
-                headers: {
-                    'Rai-Signature': signedRequest,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                console.error(response.statusText);
-                const jsonError: { error: { message: string, [key: string]: any } } = await response.json();
-                console.error(jsonError);
-                throw new Error(jsonError.error?.message);
-            }
-            return response.json();
-
-        } catch (error) {
-            console.error(error);
-            throw new Error('Failed to request');
-        }
+        RaukInventory.instance = this;
     }
 
     /**
@@ -104,11 +56,11 @@ class RaukInventory {
      *   select: { sku: 1, color: 1 }
      * });
      */
-    public async create(item: OperationCreateItem, options?: OperationRequestOptions): Promise<InventoryItem> {
-        const requestArray = options
-            ? ["insertOne", item, options]
-            : ["insertOne", item];
-        return this.request<InventoryItem>(requestArray);
+    public static async create(item: OperationCreateItem, options?: OperationRequestOptions): Promise<InventoryItem> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.create(item, options);
     }
 
     /**
@@ -129,11 +81,11 @@ class RaukInventory {
      *   select: { sku: 1, packageQuantity: 1, color: 1 }
      * });
      */
-    public async find(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem[]> {
-        const requestArray = options
-            ? ["find", query, options]
-            : ["find", query];
-        return this.request<InventoryItem[]>(requestArray);
+    public static async find(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem[]> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.find(query, options);
     }
 
     /**
@@ -151,46 +103,25 @@ class RaukInventory {
      *   select: { sku: 1, color: 1, packageQuantity: 1 }
      * });
      */
-    public async findOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem | null> {
-        const results = await this.find(query, { ...options, limit: 1 });
-        return results.length > 0 ? results[0] : null;
+    public static async findOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem | null> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.findOne(query, options);
     }
 
-    /**
-     * Find items with flexible query support (dot notation, MongoDB operators)
-     * @example
-     * // Dot notation query
-     * await raukInventory.findFlexible({ "entities.factoryId": "factory-123" });
-     *
-     * // MongoDB operators
-     * await raukInventory.findFlexible({
-     *   "packageQuantity": { $gte: 10, $lte: 100 },
-     *   "color.name": { $in: ["Red", "Blue"] }
-     * });
-     *
-     * // Complex queries with logical operators
-     * await raukInventory.findFlexible({
-     *   $or: [
-     *     { "entities.factoryId": "factory-1" },
-     *     { "entities.brandId": "brand-1" }
-     *   ]
-     * });
-     */
-    public async findFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem[]> {
-        const requestArray = options
-            ? ["find", query, options]
-            : ["find", query];
-        return this.request<InventoryItem[]>(requestArray);
+    public static async findFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem[]> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.findFlexible(query, options);
     }
 
-    /**
-     * Find a single item with flexible query support
-     * @example
-     * await raukInventory.findOneFlexible({ "entities.factoryId": "factory-123" });
-     */
-    public async findOneFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem | null> {
-        const results = await this.findFlexible(query, { ...options, limit: 1 });
-        return results.length > 0 ? results[0] : null;
+    public static async findOneFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem | null> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.findOneFlexible(query, options);
     }
 
     /**
@@ -209,15 +140,15 @@ class RaukInventory {
      *   { select: { sku: 1, color: 1 } }
      * );
      */
-    public async update(
+    public static async update(
         query: OperationQueryItem,
         update: Record<string, any>,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
-        const requestArray = options
-            ? ["findOneAndUpdate", query, update, options]
-            : ["findOneAndUpdate", query, update];
-        return this.request<OperationUpdateResult>(requestArray);
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.update(query, update, options);
     }
 
     /**
@@ -235,11 +166,11 @@ class RaukInventory {
      *   select: { sku: 1, deleted: 1 }
      * });
      */
-    public async delete(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
-        const requestArray = options
-            ? ["findOneAndUpdate", query, { deleted: { status: true } }, options]
-            : ["findOneAndUpdate", query, { deleted: { status: true } }];
-        return this.request<OperationDeleteResult>(requestArray);
+    public static async delete(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.delete(query, options);
     }
 
     /**
@@ -251,11 +182,11 @@ class RaukInventory {
      *   { $sort: { count: -1 } }
      * ]);
      */
-    public async aggregate(pipeline: OperationAggregateDto, options?: OperationRequestOptions): Promise<any[]> {
-        const requestArray = options
-            ? ["aggregate", pipeline, options]
-            : ["aggregate", pipeline];
-        return this.request<any[]>(requestArray);
+    public static async aggregate(pipeline: OperationAggregateDto, options?: OperationRequestOptions): Promise<any[]> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.aggregate(pipeline, options);
     }
 
     /**
@@ -280,11 +211,11 @@ class RaukInventory {
      *   includeDeleted: false
      * });
      */
-    public async bulkWrite(operations: OperationBulkWrite, options?: OperationRequestOptions): Promise<any> {
-        const requestArray = options
-            ? ["bulkWrite", operations, options]
-            : ["bulkWrite", operations];
-        return this.request<any>(requestArray);
+    public static async bulkWrite(operations: OperationBulkWrite, options?: OperationRequestOptions): Promise<any> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.bulkWrite(operations, options);
     }
 
     /**
@@ -303,15 +234,15 @@ class RaukInventory {
      *   { select: { sku: 1, packageQuantity: 1 } }
      * );
      */
-    public async updateMany(
+    public static async updateMany(
         query: OperationQueryItem,
         update: Record<string, any>,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
-        const requestArray = options
-            ? ["updateMany", query, update, options]
-            : ["updateMany", query, update];
-        return this.request<OperationUpdateResult>(requestArray);
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.updateMany(query, update, options);
     }
 
     /**
@@ -329,11 +260,11 @@ class RaukInventory {
      *   select: { sku: 1 }
      * });
      */
-    public async deleteOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
-        const requestArray = options
-            ? ["deleteOne", query, options]
-            : ["deleteOne", query];
-        return this.request<OperationDeleteResult>(requestArray);
+    public static async deleteOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.deleteOne(query, options);
     }
 
     /**
@@ -351,13 +282,12 @@ class RaukInventory {
      *   select: { sku: 1, packageQuantity: 1 }
      * });
      */
-    public async deleteMany(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
-        const requestArray = options
-            ? ["deleteMany", query, options]
-            : ["deleteMany", query];
-        return this.request<OperationDeleteResult>(requestArray);
+    public static async deleteMany(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.deleteMany(query, options);
     }
-
 
     /**
      * Batch update multiple items with a simplified interface
@@ -371,24 +301,15 @@ class RaukInventory {
      * ];
      * const result = await raukInventory.updateBatch(batchUpdates);
      */
-    public async updateBatch(updates: [OperationQueryItem, Record<string, any>][], options?: OperationRequestOptions): Promise<any> {
-        const bulkOperations = updates.map(([query, update]) =>
-        ({
-            updateOne: {
-                filter: query,
-                update: update
-            }
-        }))
-
-
-        return this.bulkWrite(bulkOperations, options);
+    public static async updateBatch(updates: [OperationQueryItem, Record<string, any>][], options?: OperationRequestOptions): Promise<any> {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        return RaukInventory.instance.updateBatch(updates, options);
     }
 }
 
-// Export operation types
-export * from './types/operations';
-
-// Export item types
-export * from './types/item';
-
 export default RaukInventory;
+export * from './types/operations';
+export * from './types/item';
+export { RaukInventoryClient };
