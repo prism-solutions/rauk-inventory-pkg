@@ -161,11 +161,6 @@ export interface OperationQueryAvailability {
     sold?: OperationQueryStatusDetails;
 }
 
-
-// Query DTO types (for complex queries)
-
-
-
 // Bulk Write operation types
 export interface OperationUpdateOne {
     filter: OperationQuery;

@@ -64,6 +64,6 @@ export type OperationQuery = {
     $ne?: any;
     $eq?: any;
     $all?: any[];
-
+    $expr?: Record<string, any>;
     // Add other logical operators as needed
 };

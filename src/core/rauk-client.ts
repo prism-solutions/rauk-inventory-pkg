@@ -13,7 +13,7 @@ import type {
     OperationInsertResult
 } from '../types/operations';
 import type { InventoryItem } from '../types/item';
-import { signRequest } from '../utils/api-request';
+import { signRequest } from '../utils/sign-request';
 
 class RaukInventoryClient {
 

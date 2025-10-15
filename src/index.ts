@@ -9,7 +9,7 @@ import type {
     OperationInsertResult
 } from './types/operations';
 import type { InventoryItem } from './types/item';
-import { RaukInventoryClient } from './core/client';
+import { RaukInventoryClient } from './core/rauk-client';
 
 export class RaukInventory extends RaukInventoryClient {
     private static instance: RaukInventory | null = null;
