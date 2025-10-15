@@ -106,12 +106,14 @@ describe('RaukInventoryClient', () => {
     it('should create an item', async () => {
         const client = new RaukInventoryClient(config);
         const item: OperationCreateItem = {
-            entities: { apiId: "123", entityId: "456", factoryId: "789", brandId: "101" },
+            entities: { factoryId: "789", brandId: "101" },
             sku: "ITEM-002",
             transitTo: { id: "warehouse-2" },
             packageQuantity: 5,
-            color: { name: "Blue" },
-            currentLocation: { id: "warehouse-2" }
+            color: { name: "Blue", id: "101" },
+            currentLocation: { id: "warehouse-2" },
+            brandDetails: { id: "101", name: "Brand 1", type: "Brand" },
+            factoryDetails: { id: "789", type: "Factory" }
         };
         const result = await client.create(item);
         expect(result).toEqual({ sku: "ITEM-002", packageQuantity: 5 });

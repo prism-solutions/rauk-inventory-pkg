@@ -91,13 +91,23 @@ export interface OperationBaseItem {
 // Create operation types
 export interface OperationCreateItem extends OperationBaseItem {
     currentLocation: OperationLocation;
-    transitTo: OperationTransitTo;
-    entities: OperationEntities;
+    entities: OperationEntities & {
+        factoryId: string;
+        brandId: string;
+    };
     sku: string;
     packageQuantity: number;
-    color: OperationColor;
-    brandDetails?: OperationBrandDetails;
-    factoryDetails?: OperationFactoryDetails;
+    color: OperationColor & {
+        id: string;
+    };
+    brandDetails: OperationBrandDetails & {
+        type: string;
+        id: string;
+    };
+    factoryDetails: OperationFactoryDetails & {
+        type: string;
+        id: string;
+    };
 }
 
 // Update operation types
