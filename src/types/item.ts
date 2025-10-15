@@ -7,10 +7,10 @@ interface StatusDetails {
 }
 
 interface Entities {
-    apiId: string;
-    entityId: string;
-    factoryId: string;
-    brandId: string;
+    readonly apiId: string;
+    readonly entityId: string;
+    readonly factoryId: string;
+    readonly brandId: string;
 }
 
 interface Location {
@@ -56,7 +56,7 @@ interface LocationHistoryEntry {
 
 export interface InventoryItem {
     hardcode?: string;
-    entities: Entities;
+    readonlyentities: Entities;
     currentLocation: Location;
     transitTo?: TransitTo;
     availability: Map<string, StatusDetails>;
@@ -69,5 +69,5 @@ export interface InventoryItem {
     locationHistory?: LocationHistoryEntry[];
     createdAt?: Date;
     updatedAt?: Date;
-    id: string;
+    readonly id: string;
 }

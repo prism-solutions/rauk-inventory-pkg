@@ -6,7 +6,8 @@ import type {
     OperationRequestOptions,
     OperationDeleteResult,
     OperationUpdateResult,
-    OperationInsertResult
+    OperationInsertResult,
+    OperationUpdateItem
 } from './types/operations';
 import type { InventoryItem } from './types/item';
 import { RaukInventoryClient } from './core/rauk-client';
@@ -14,6 +15,14 @@ import { RaukInventoryClient } from './core/rauk-client';
 export class RaukInventory extends RaukInventoryClient {
     private static instance: RaukInventory | null = null;
 
+    /**
+     * Constructor for RaukInventory
+     * @param config - Configuration object
+     * @param config.apiKeyId - API key ID
+     * @param config.apiSecret - API secret
+     * @param config.apiPublicKey - API public key
+     * @param config.apiBaseUrl - API base URL optional, will default to the standard Rauk Inventory API endpoint
+     */
     constructor(config: {
         apiKeyId: string;
         apiSecret: string;
@@ -126,7 +135,7 @@ export class RaukInventory extends RaukInventoryClient {
      */
     public static async update(
         query: OperationQuery,
-        update: Record<string, any>,
+        update: OperationUpdateItem,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
         if (!RaukInventory.instance) {
@@ -220,7 +229,7 @@ export class RaukInventory extends RaukInventoryClient {
      */
     public static async updateMany(
         query: OperationQuery,
-        update: Record<string, any>,
+        update: OperationUpdateItem,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
         if (!RaukInventory.instance) {
@@ -285,7 +294,7 @@ export class RaukInventory extends RaukInventoryClient {
      * ];
      * const result = await raukInventory.updateBatch(batchUpdates);
      */
-    public static async updateBatch(updates: [OperationQuery, Record<string, any>][], options?: OperationRequestOptions): Promise<any> {
+    public static async updateBatch(updates: [OperationQuery, OperationUpdateItem][], options?: OperationRequestOptions): Promise<any> {
         if (!RaukInventory.instance) {
             throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
         }

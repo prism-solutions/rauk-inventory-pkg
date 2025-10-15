@@ -22,6 +22,14 @@ class RaukInventoryClient {
     protected readonly apiPublicKey: string;
     protected readonly apiBaseUrl: string;
 
+    /**
+    * Constructor for RaukInventory
+    * @param config - Configuration object
+    * @param config.apiKeyId - API key ID
+    * @param config.apiSecret - API secret
+    * @param config.apiPublicKey - API public key
+    * @param config.apiBaseUrl - API base URL optional, will default to the standard Rauk Inventory API endpoint
+    */
     constructor({
         apiKeyId,
         apiSecret,
@@ -173,7 +181,7 @@ class RaukInventoryClient {
      */
     public async update(
         query: OperationQuery,
-        update: Record<string, any>,
+        update: OperationUpdateItem,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
         const requestArray = options
@@ -267,7 +275,7 @@ class RaukInventoryClient {
      */
     public async updateMany(
         query: OperationQuery,
-        update: Record<string, any>,
+        update: OperationUpdateItem,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
         const requestArray = options
@@ -333,7 +341,7 @@ class RaukInventoryClient {
      * ];
      * const result = await raukInventory.updateBatch(batchUpdates);
      */
-    public async updateBatch(updates: [OperationQuery, Record<string, any>][], options?: OperationRequestOptions): Promise<any> {
+    public async updateBatch(updates: [OperationQuery, OperationUpdateItem][], options?: OperationRequestOptions): Promise<any> {
         const bulkOperations = updates.map(([query, update]) => ({
             updateOne: {
                 filter: query,

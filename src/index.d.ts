@@ -15,6 +15,6 @@ import { RaukInventory } from '.';
 
 
 
-export * from './types/operations';
-export * from './types/item';
+export type * from './types/operations';
+export type * from './types/item';
 export { RaukInventory };

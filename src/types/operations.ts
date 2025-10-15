@@ -1,5 +1,6 @@
 // Base types with ObjectId replaced by string
-import { OperationQuery } from "./query";
+import type { OperationQuery } from "./query";
+import type { OperationUpdateItem } from "./update";
 // Color types
 
 export interface OperationColor {
@@ -30,10 +31,10 @@ export interface OperationStatusDetails {
 
 // Entities types
 export interface OperationEntities {
-    apiId?: string;
-    entityId?: string;
-    factoryId?: string;
-    brandId?: string;
+    readonly apiId?: string;
+    readonly entityId?: string;
+    readonly factoryId?: string;
+    readonly brandId?: string;
 }
 
 // Location types
@@ -111,9 +112,6 @@ export interface OperationCreateItem extends OperationBaseItem {
 }
 
 // Update operation types
-export interface OperationUpdateItem extends OperationBaseItem {
-    // entities and locationHistory are excluded from updates
-}
 
 // Query operation types (for filtering)
 export interface OperationQueryColor {
@@ -291,7 +289,8 @@ export interface OperationInsertResult {
     acknowledged: boolean;
     insertedId: string;
 }
-export { OperationQuery } from "./query";
+export type { OperationQuery } from "./query";
+export type { OperationUpdateItem } from "./update";
 // Export all operation types
 export type OperationTypes = {
     CreateItem: OperationCreateItem;

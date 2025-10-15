@@ -1,4 +1,5 @@
-import { RaukInventory, RaukInventoryClient, InventoryItem, OperationCreateItem, OperationQuery } from '../src/index';
+import { RaukInventory, RaukInventoryClient } from '../src/index';
+import type { OperationCreateItem, OperationQuery, OperationUpdateItem } from '../src/types/operations';
 
 describe('RaukInventory', () => {
     const config = {
@@ -66,7 +67,7 @@ describe('RaukInventory', () => {
 
     it('should updateBatch via static method', async () => {
         new RaukInventory(config);
-        const updates: [OperationQuery, Record<string, any>][] = [
+        const updates: [OperationQuery, OperationUpdateItem][] = [
             [{ id: "68e7f70f8d21cb8e86067aff" }, { "color.name": "Traffic Red" }],
         ];
         jest.spyOn(global, 'fetch').mockResolvedValue({
