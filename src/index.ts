@@ -4,12 +4,14 @@ import type {
     OperationQueryItem,
     OperationFlexibleQuery,
     OperationBulkWrite,
+    OperationUpdateOne,
     OperationAggregateDto,
     OperationMatchStageDto,
     OperationRequestOptions,
     OperationDeleteResult,
     OperationUpdateResult,
-    OperationInsertResult
+    OperationInsertResult,
+    OperationBulkWriteOperations
 } from './types/operations';
 import type { InventoryItem } from './types/item';
 import { signRequest } from './utils/api-request';
@@ -76,6 +78,31 @@ class RaukInventory {
 
     /**
      * Create a new inventory item
+     * @example
+     * // Basic item creation
+     * const newItem = await raukInventory.create({
+     *   entities: {
+     *     apiId: "item-api-123",
+     *     entityId: "item-entity-456",
+     *     factoryId: "factory-789",
+     *     brandId: "brand-101"
+     *   },
+     *   sku: "ITEM-001",
+     *   packageQuantity: 10,
+     *   color: { name: "Red" },
+     *   currentLocation: { id: "warehouse-1" }
+     * });
+     *
+     * // With options
+     * const newItemWithOptions = await raukInventory.create({
+     *   entities: { apiId: "123", entityId: "456", factoryId: "789", brandId: "101" },
+     *   sku: "ITEM-002",
+     *   packageQuantity: 5,
+     *   color: { name: "Blue" },
+     *   currentLocation: { id: "warehouse-2" }
+     * }, {
+     *   select: { sku: 1, color: 1 }
+     * });
      */
     public async create(item: OperationCreateItem, options?: OperationRequestOptions): Promise<InventoryItem> {
         const requestArray = options
@@ -86,6 +113,21 @@ class RaukInventory {
 
     /**
      * Find multiple inventory items
+     * @example
+     * // Find items by SKU
+     * const items = await raukInventory.find({
+     *   sku: "ITEM-001"
+     * });
+     *
+     * // Find items with structured query
+     * const items = await raukInventory.find({
+     *   entities: { factoryId: "factory-789" },
+     *   packageQuantity: { $gte: 10 }
+     * }, {
+     *   limit: 20,
+     *   sort: { createdAt: -1 },
+     *   select: { sku: 1, packageQuantity: 1, color: 1 }
+     * });
      */
     public async find(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem[]> {
         const requestArray = options
@@ -96,6 +138,18 @@ class RaukInventory {
 
     /**
      * Find a single inventory item
+     * @example
+     * // Find one item by SKU
+     * const item = await raukInventory.findOne({
+     *   sku: "ITEM-001"
+     * });
+     *
+     * // Find one item with options
+     * const item = await raukInventory.findOne({
+     *   entities: { factoryId: "factory-789" }
+     * }, {
+     *   select: { sku: 1, color: 1, packageQuantity: 1 }
+     * });
      */
     public async findOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem | null> {
         const results = await this.find(query, { ...options, limit: 1 });
@@ -141,6 +195,19 @@ class RaukInventory {
 
     /**
      * Update inventory items
+     * @example
+     * // Update one item by SKU
+     * const result = await raukInventory.update(
+     *   { sku: "ITEM-001" },
+     *   { packageQuantity: 20, currentLocation: { id: "warehouse-2" } }
+     * );
+     *
+     * // Update with options
+     * const result = await raukInventory.update(
+     *   { entities: { factoryId: "factory-789" } },
+     *   { color: { name: "Blue" } },
+     *   { select: { sku: 1, color: 1 } }
+     * );
      */
     public async update(
         query: OperationQueryItem,
@@ -155,6 +222,18 @@ class RaukInventory {
 
     /**
      * Delete inventory items (marks as deleted, doesn't remove)
+     * @example
+     * // Mark items as deleted by SKU
+     * const result = await raukInventory.delete({
+     *   sku: "ITEM-001"
+     * });
+     *
+     * // Mark multiple items as deleted
+     * const result = await raukInventory.delete({
+     *   entities: { factoryId: "factory-789" }
+     * }, {
+     *   select: { sku: 1, deleted: 1 }
+     * });
      */
     public async delete(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
         const requestArray = options
@@ -181,8 +260,31 @@ class RaukInventory {
 
     /**
      * Bulk write operations
+     * @example
+     * // Single operation
+     * const result = await raukInventory.bulkWrite({
+     *   updateOne: {
+     *     filter: { sku: "ITEM-001" },
+     *     update: { packageQuantity: 20 }
+     *   }
+     * });
+     *
+     * // Multiple operations (array)
+     * const operations = [
+     *  {
+     *    updateOne: {
+     *      filter: { sku: "ITEM-001" },
+     *      update: { packageQuantity: 20 }
+     *    }
+     *  },
+     *  {
+     *    updateOne: {
+     * ];
+     * const result = await raukInventory.bulkWrite(operations, {
+     *   includeDeleted: false
+     * });
      */
-    public async bulkWrite(operations: OperationBulkWrite, options?: OperationRequestOptions): Promise<any> {
+    public async bulkWrite(operations: OperationBulkWriteOperations, options?: OperationRequestOptions): Promise<any> {
         const requestArray = options
             ? ["bulkWrite", operations, options]
             : ["bulkWrite", operations];
@@ -191,6 +293,19 @@ class RaukInventory {
 
     /**
      * Update multiple inventory items
+     * @example
+     * // Update all items from a specific factory
+     * const result = await raukInventory.updateMany(
+     *   { "entities.factoryId": "factory-789" },
+     *   { currentLocation: { id: "warehouse-2" } }
+     * );
+     *
+     * // Update with options
+     * const result = await raukInventory.updateMany(
+     *   { packageQuantity: { $lte: 10 } },
+     *   { packageQuantity: 20 },
+     *   { select: { sku: 1, packageQuantity: 1 } }
+     * );
      */
     public async updateMany(
         query: OperationQueryItem,
@@ -205,6 +320,18 @@ class RaukInventory {
 
     /**
      * Delete a single inventory item
+     * @example
+     * // Delete one item by SKU
+     * const result = await raukInventory.deleteOne({
+     *   sku: "ITEM-001"
+     * });
+     *
+     * // Delete with options
+     * const result = await raukInventory.deleteOne({
+     *   entities: { factoryId: "factory-789" }
+     * }, {
+     *   select: { sku: 1 }
+     * });
      */
     public async deleteOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
         const requestArray = options
@@ -215,12 +342,48 @@ class RaukInventory {
 
     /**
      * Delete multiple inventory items
+     * @example
+     * // Delete all items from a factory
+     * const result = await raukInventory.deleteMany({
+     *   entities: { factoryId: "factory-789" }
+     * });
+     *
+     * // Delete with options
+     * const result = await raukInventory.deleteMany({
+     *   packageQuantity: { $lte: 5 }
+     * }, {
+     *   select: { sku: 1, packageQuantity: 1 }
+     * });
      */
     public async deleteMany(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
         const requestArray = options
             ? ["deleteMany", query, options]
             : ["deleteMany", query];
         return this.request<OperationDeleteResult>(requestArray);
+    }
+
+    /**
+     * Batch update multiple items with a simplified interface
+     * @example
+     * // Update multiple items in batch
+     * const batchUpdates = [
+     *   [{ sku: "ITEM-001" }, { packageQuantity: 20 }],
+     *   [{ sku: "ITEM-002" }, { currentLocation: { id: "warehouse-2" } }],
+     *   [{ entities: { factoryId: "factory-789" } }, { color: { name: "Blue" } }]
+     * ];
+     * const result = await raukInventory.updateBatch(batchUpdates);
+     */
+    public async updateBatch(updates: [OperationQueryItem, OperationUpdateItem][], options?: OperationRequestOptions): Promise<any> {
+        const bulkOperations = updates.map(([query, update]) =>
+        ({
+            updateOne: {
+                filter: query,
+                update: { update }
+            }
+        }))
+
+
+        return this.bulkWrite(bulkOperations, options);
     }
 }
 

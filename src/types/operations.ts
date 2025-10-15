@@ -214,6 +214,8 @@ export interface OperationBulkWrite {
     updateOne?: OperationUpdateOne;
 }
 
+export type OperationBulkWriteOperations = OperationBulkWrite[];
+
 // Aggregate operation types
 
 // Match stage
