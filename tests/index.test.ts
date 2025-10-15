@@ -1,5 +1,13 @@
 import { RaukInventory, RaukInventoryClient } from '../src/index';
 import type { OperationCreateItem, OperationQuery, OperationUpdateItem } from '../src/types/operations';
+import {
+    RaukValidationError,
+    RaukAuthenticationError,
+    RaukNetworkError,
+    isValidationError,
+    isAuthenticationError,
+    isNetworkError
+} from '../src/utils/errors';
 
 describe('RaukInventory', () => {
     const config = {
@@ -82,6 +90,142 @@ describe('RaukInventory', () => {
         new RaukInventory(config);
         const aggregate = await RaukInventory.aggregate([{ $match: { "color.name": "Traffic Red" } }]);
         expect(aggregate).toEqual([{ packageQuantity: 10, sku: "ITEM-001" }]);
+    });
+
+    it('should throw RaukValidationError for validation failures', async () => {
+        new RaukInventory(config);
+
+        // Mock fetch to return validation error response
+        jest.spyOn(global, 'fetch').mockResolvedValue({
+            ok: false,
+            status: 400,
+            json: async () => ({
+                success: false,
+                error: {
+                    errors: [
+                        {
+                            property: "brandDetails",
+                            constraints: [
+                                "brandDetails should not be null or undefined"
+                            ],
+                            children: []
+                        },
+                        {
+                            property: "factoryDetails",
+                            constraints: [
+                                "factoryDetails should not be null or undefined"
+                            ],
+                            children: []
+                        }
+                    ],
+                    name: "ValidationException"
+                }
+            }),
+        } as Response);
+
+        await expect(RaukInventory.find({ sku: "INVALID" }))
+            .rejects
+            .toThrow(RaukValidationError);
+
+        try {
+            await RaukInventory.find({ sku: "INVALID" });
+        } catch (error) {
+            expect(isValidationError(error)).toBe(true);
+            if (isValidationError(error)) {
+                expect(error.validationErrors).toHaveLength(2);
+                expect(error.getAllMessages()).toEqual([
+                    "brandDetails should not be null or undefined",
+                    "factoryDetails should not be null or undefined"
+                ]);
+                expect(error.getErrorsForProperty("brandDetails")).toHaveLength(1);
+                expect(error.getErrorsForProperty("factoryDetails")).toHaveLength(1);
+                expect(error.statusCode).toBe(400);
+                expect(error.originalError).toBeDefined();
+            }
+        }
+    });
+
+    it('should throw RaukAuthenticationError for auth failures', async () => {
+        new RaukInventory(config);
+
+        // Mock fetch to return authentication error
+        jest.spyOn(global, 'fetch').mockResolvedValue({
+            ok: false,
+            status: 401,
+            json: async () => ({
+                success: false,
+                error: {
+                    message: "Invalid API credentials",
+                    name: "AuthenticationError"
+                }
+            }),
+        } as Response);
+
+        await expect(RaukInventory.find({ sku: "TEST" }))
+            .rejects
+            .toThrow(RaukAuthenticationError);
+
+        try {
+            await RaukInventory.find({ sku: "TEST" });
+        } catch (error) {
+            expect(isAuthenticationError(error)).toBe(true);
+            if (isAuthenticationError(error)) {
+                expect(error.message).toContain("Invalid API credentials");
+                expect(error.statusCode).toBe(401);
+            }
+        }
+    });
+
+    it('should throw RaukNetworkError for server errors', async () => {
+        new RaukInventory(config);
+
+        // Mock fetch to return server error
+        jest.spyOn(global, 'fetch').mockResolvedValue({
+            ok: false,
+            status: 500,
+            json: async () => ({
+                success: false,
+                error: {
+                    message: "Internal server error",
+                    name: "ServerError"
+                }
+            }),
+        } as Response);
+
+        await expect(RaukInventory.find({ sku: "TEST" }))
+            .rejects
+            .toThrow(RaukNetworkError);
+
+        try {
+            await RaukInventory.find({ sku: "TEST" });
+        } catch (error) {
+            expect(isNetworkError(error)).toBe(true);
+            if (isNetworkError(error)) {
+                expect(error.message).toContain("Internal server error");
+                expect(error.statusCode).toBe(500);
+            }
+        }
+    });
+
+    it('should handle network failures gracefully', async () => {
+        new RaukInventory(config);
+
+        // Mock fetch to throw a network error
+        jest.spyOn(global, 'fetch').mockRejectedValue(new TypeError('fetch failed'));
+
+        await expect(RaukInventory.find({ sku: "TEST" }))
+            .rejects
+            .toThrow(RaukNetworkError);
+
+        try {
+            await RaukInventory.find({ sku: "TEST" });
+        } catch (error) {
+            expect(isNetworkError(error)).toBe(true);
+            if (isNetworkError(error)) {
+                expect(error.message).toContain("Network request failed");
+                expect(error.context?.originalError).toBe("fetch failed");
+            }
+        }
     });
 });
 

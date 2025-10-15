@@ -112,7 +112,8 @@ class RaukInventoryClient {
                         statusCode: 0,
                         timestamp: new Date().toISOString(),
                         context: { originalError: error.message }
-                    }
+                    },
+                    undefined // No original API response for network errors
                 );
             }
 
@@ -123,7 +124,8 @@ class RaukInventoryClient {
                     statusCode: 0,
                     timestamp: new Date().toISOString(),
                     context: { originalError: error instanceof Error ? error.message : String(error) }
-                }
+                },
+                undefined // No original API response for unexpected errors
             );
         }
     }

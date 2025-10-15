@@ -81,9 +81,10 @@ export class RaukValidationError extends RaukError {
     constructor(
         message: string,
         validationErrors: ValidationErrorDetail[],
-        options: RaukErrorOptions = {}
+        options: RaukErrorOptions = {},
+        originalError?: RaukApiErrorResponse
     ) {
-        super(message, options);
+        super(message, options, originalError);
         this.validationErrors = validationErrors;
     }
 
@@ -128,8 +129,8 @@ export class RaukValidationError extends RaukError {
 export class RaukAuthenticationError extends RaukError {
     public readonly name: string = 'RaukAuthenticationError';
 
-    constructor(message: string = 'Authentication failed', options: RaukErrorOptions = {}) {
-        super(message, options);
+    constructor(message: string = 'Authentication failed', options: RaukErrorOptions = {}, originalError?: RaukApiErrorResponse) {
+        super(message, options, originalError);
     }
 }
 
@@ -139,8 +140,8 @@ export class RaukAuthenticationError extends RaukError {
 export class RaukNetworkError extends RaukError {
     public readonly name: string = 'RaukNetworkError';
 
-    constructor(message: string = 'Network request failed', options: RaukErrorOptions = {}) {
-        super(message, options);
+    constructor(message: string = 'Network request failed', options: RaukErrorOptions = {}, originalError?: RaukApiErrorResponse) {
+        super(message, options, originalError);
     }
 }
 
@@ -150,8 +151,8 @@ export class RaukNetworkError extends RaukError {
 export class RaukApiError extends RaukError {
     public readonly name: string = 'RaukApiError';
 
-    constructor(message: string, options: RaukErrorOptions = {}) {
-        super(message, options);
+    constructor(message: string, options: RaukErrorOptions = {}, originalError?: RaukApiErrorResponse) {
+        super(message, options, originalError);
     }
 }
 
@@ -172,7 +173,8 @@ export function parseApiError(response: Response, errorBody: any): RaukError {
         return new RaukValidationError(
             errorBody.error.message || allMessages.join('; '),
             validationErrors,
-            errorOptions
+            errorOptions,
+            errorBody
         );
     }
 
@@ -180,7 +182,8 @@ export function parseApiError(response: Response, errorBody: any): RaukError {
     if (response.status === 401 || response.status === 403) {
         return new RaukAuthenticationError(
             errorBody?.error?.message || 'Authentication failed',
-            errorOptions
+            errorOptions,
+            errorBody
         );
     }
 
@@ -188,14 +191,16 @@ export function parseApiError(response: Response, errorBody: any): RaukError {
     if (response.status >= 500) {
         return new RaukNetworkError(
             errorBody?.error?.message || 'Server error occurred',
-            errorOptions
+            errorOptions,
+            errorBody
         );
     }
 
     // Generic API error
     return new RaukApiError(
         errorBody?.error?.message || `API request failed with status ${response.status}`,
-        errorOptions
+        errorOptions,
+        errorBody
     );
 }
 
