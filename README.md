@@ -237,20 +237,87 @@ The SDK provides full TypeScript support with:
 
 ## Error Handling
 
-The SDK throws standard JavaScript errors for:
-- Invalid API credentials
-- Malformed requests
-- Network errors
-- Validation failures
+The SDK provides structured error handling with specific error types for different scenarios:
 
-Always wrap SDK calls in try-catch blocks:
+### Error Types
+
+- **`RaukValidationError`** - Validation failures with detailed field-level error information
+- **`RaukAuthenticationError`** - Authentication/authorization issues (401/403 responses)
+- **`RaukNetworkError`** - Network connectivity issues and server errors (5xx responses)
+- **`RaukError`** - Base error class for all SDK errors
+
+### Error Structure
 
 ```typescript
+import {
+    isValidationError,
+    isAuthenticationError,
+    isNetworkError,
+    RaukValidationError
+} from 'rauk-inventory';
+
+// Handle errors with proper typing
 try {
     const items = await RaukInventory.find({ sku: "ITEM-001" });
 } catch (error) {
-    console.error("Operation failed:", error.message);
+    if (isValidationError(error)) {
+        // Access detailed validation errors
+        console.log("Validation failed for properties:", error.validationErrors);
+        console.log("All error messages:", error.getAllMessages());
+
+        // Get errors for specific property
+        const brandErrors = error.getErrorsForProperty("brandDetails");
+        console.log("Brand errors:", brandErrors);
+    } else if (isAuthenticationError(error)) {
+        console.log("Authentication failed:", error.message);
+    } else if (isNetworkError(error)) {
+        console.log("Network error:", error.message);
+    } else {
+        console.log("Other error:", error.message);
+    }
+
+    // Access common error properties
+    console.log("Status code:", error.statusCode);
+    console.log("Request ID:", error.requestId);
+    console.log("Timestamp:", error.timestamp);
+    console.log("Original API response:", error.originalError);
 }
+```
+
+### Error Response Format
+
+The SDK parses API error responses and converts them into structured TypeScript errors:
+
+```typescript
+// API returns:
+{
+    "success": false,
+    "error": {
+        "errors": [
+            {
+                "property": "brandDetails",
+                "constraints": [
+                    "brandDetails should not be null or undefined"
+                ],
+                "children": []
+            }
+        ],
+        "name": "ValidationException"
+    }
+}
+
+// SDK converts to:
+const error = new RaukValidationError(
+    "Validation failed",
+    [
+        {
+            property: "brandDetails",
+            constraints: ["brandDetails should not be null or undefined"],
+            children: []
+        }
+    ],
+    { statusCode: 400 }
+);
 ```
 
 ## Examples

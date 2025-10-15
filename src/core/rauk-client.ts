@@ -14,6 +14,15 @@ import type {
 } from '../types/operations';
 import type { InventoryItem } from '../types/item';
 import { signRequest } from '../utils/sign-request';
+import {
+    parseApiError,
+    RaukValidationError,
+    RaukAuthenticationError,
+    RaukNetworkError,
+    RaukError,
+    RaukApiErrorResponse,
+    isValidationError
+} from '../utils/errors';
 
 class RaukInventoryClient {
 
@@ -70,15 +79,52 @@ class RaukInventoryClient {
             });
 
             if (!response.ok) {
-                console.error(response.statusText);
-                const jsonError: { error: { message: string, [key: string]: any } } = await response.json();
-                console.error(jsonError);
-                throw new Error(jsonError.error?.message);
+                let errorBody: RaukApiErrorResponse;
+
+                try {
+                    errorBody = await response.json();
+                } catch (parseError) {
+                    // If we can't parse the error response, create a generic one
+                    errorBody = {
+                        success: false,
+                        error: {
+                            name: 'ParseError',
+                            message: `HTTP ${response.status}: ${response.statusText}`
+                        }
+                    };
+                }
+
+                throw parseApiError(response, errorBody);
             }
-            return response.json();
+
+            return await response.json();
         } catch (error) {
-            console.error(error);
-            throw new Error('Failed to request');
+            // Re-throw Rauk errors as-is
+            if (error instanceof RaukError) {
+                throw error;
+            }
+
+            // Handle network errors (fetch failures, DNS issues, etc.)
+            if (error instanceof TypeError && error.message.includes('fetch')) {
+                throw new RaukNetworkError(
+                    'Network request failed - check your internet connection and API endpoint',
+                    {
+                        statusCode: 0,
+                        timestamp: new Date().toISOString(),
+                        context: { originalError: error.message }
+                    }
+                );
+            }
+
+            // Handle other unexpected errors
+            throw new RaukError(
+                'Unexpected error occurred during API request',
+                {
+                    statusCode: 0,
+                    timestamp: new Date().toISOString(),
+                    context: { originalError: error instanceof Error ? error.message : String(error) }
+                }
+            );
         }
     }
 

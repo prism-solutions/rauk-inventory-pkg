@@ -11,6 +11,20 @@ import type {
 } from './types/operations';
 import type { InventoryItem } from './types/item';
 import { RaukInventoryClient } from './core/rauk-client';
+import {
+    RaukError,
+    RaukValidationError,
+    RaukAuthenticationError,
+    RaukNetworkError,
+    RaukApiError,
+    ValidationErrorDetail,
+    RaukApiErrorResponse,
+    RaukErrorOptions,
+    isRaukError,
+    isValidationError,
+    isAuthenticationError,
+    isNetworkError
+} from './utils/errors';
 
 export class RaukInventory extends RaukInventoryClient {
     private static instance: RaukInventory | null = null;
@@ -306,3 +320,19 @@ export default RaukInventory;
 export * from './types/operations';
 export * from './types/item';
 export { RaukInventoryClient };
+
+// Export error handling utilities
+export {
+    RaukError,
+    RaukValidationError,
+    RaukAuthenticationError,
+    RaukNetworkError,
+    RaukApiError,
+    ValidationErrorDetail,
+    RaukApiErrorResponse,
+    RaukErrorOptions,
+    isRaukError,
+    isValidationError,
+    isAuthenticationError,
+    isNetworkError
+};
