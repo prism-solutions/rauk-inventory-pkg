@@ -2,6 +2,7 @@ import type {
     OperationCreateItem,
     OperationUpdateItem,
     OperationQueryItem,
+    OperationFlexibleQuery,
     OperationBulkWrite,
     OperationAggregateDto,
     OperationMatchStageDto,
@@ -52,15 +53,18 @@ class RaukInventory {
         try {
             const response = await fetch(`${this.apiBaseUrl}/query`, {
                 method: 'POST',
+                body: JSON.stringify(requestArray),
                 headers: {
-                    'Authorization': `Bearer ${signedRequest}`,
+                    'Rai-Signature': signedRequest,
                     'Content-Type': 'application/json',
                 },
             });
 
             if (!response.ok) {
                 console.error(response.statusText);
-                throw new Error('Failed to request');
+                const jsonError: { error: { message: string, [key: string]: any } } = await response.json();
+                console.error(jsonError);
+                throw new Error(jsonError.error?.message);
             }
             return response.json();
 
@@ -99,6 +103,43 @@ class RaukInventory {
     }
 
     /**
+     * Find items with flexible query support (dot notation, MongoDB operators)
+     * @example
+     * // Dot notation query
+     * await raukInventory.findFlexible({ "entities.factoryId": "factory-123" });
+     *
+     * // MongoDB operators
+     * await raukInventory.findFlexible({
+     *   "packageQuantity": { $gte: 10, $lte: 100 },
+     *   "color.name": { $in: ["Red", "Blue"] }
+     * });
+     *
+     * // Complex queries with logical operators
+     * await raukInventory.findFlexible({
+     *   $or: [
+     *     { "entities.factoryId": "factory-1" },
+     *     { "entities.brandId": "brand-1" }
+     *   ]
+     * });
+     */
+    public async findFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem[]> {
+        const requestArray = options
+            ? ["find", query, options]
+            : ["find", query];
+        return this.request<InventoryItem[]>(requestArray);
+    }
+
+    /**
+     * Find a single item with flexible query support
+     * @example
+     * await raukInventory.findOneFlexible({ "entities.factoryId": "factory-123" });
+     */
+    public async findOneFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem | null> {
+        const results = await this.findFlexible(query, { ...options, limit: 1 });
+        return results.length > 0 ? results[0] : null;
+    }
+
+    /**
      * Update inventory items
      */
     public async update(
@@ -124,11 +165,17 @@ class RaukInventory {
 
     /**
      * Perform aggregation operations
+     * @example
+     * await raukInventory.aggregate([
+     *   { $match: { "entities.factoryId": "factory-123" } },
+     *   { $group: { _id: "$sku", count: { $sum: 1 } } },
+     *   { $sort: { count: -1 } }
+     * ]);
      */
     public async aggregate(pipeline: OperationAggregateDto, options?: OperationRequestOptions): Promise<any[]> {
         const requestArray = options
-            ? ["aggregate", pipeline.pipeline, options]
-            : ["aggregate", pipeline.pipeline];
+            ? ["aggregate", pipeline, options]
+            : ["aggregate", pipeline];
         return this.request<any[]>(requestArray);
     }
 

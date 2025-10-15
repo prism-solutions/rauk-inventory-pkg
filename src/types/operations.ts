@@ -182,6 +182,26 @@ export interface OperationQueryDto extends OperationQueryItem {
     $or?: OperationQueryDto[];
     $nor?: OperationQueryDto[];
     $not?: OperationQueryDto;
+    $in?: any[];
+    $nin?: any[];
+    $exists?: boolean;
+    $regex?: string;
+    $options?: string;
+    $gt?: any;
+    $gte?: any;
+    $lt?: any;
+    $lte?: any;
+    $ne?: any;
+    $eq?: any;
+    $size?: number;
+    $all?: any[];
+    $elemMatch?: OperationQueryDto;
+    $type?: string | number;
+}
+
+// Flexible query type that supports dot notation and any MongoDB operators
+export interface OperationFlexibleQuery {
+    [key: string]: any | OperationFlexibleQuery | OperationFlexibleQuery[];
 }
 
 // Bulk Write operation types
@@ -195,13 +215,69 @@ export interface OperationBulkWrite {
 }
 
 // Aggregate operation types
-export interface OperationAggregateStage {
-    [key: string]: any;
+
+// Match stage
+export interface OperationMatchStage {
+    $match: OperationFlexibleQuery;
 }
 
-export interface OperationAggregateDto {
-    pipeline: OperationAggregateStage[];
+// Group stage
+export interface OperationGroupStage {
+    $group: {
+        _id?: string | { [key: string]: any };
+        [key: string]: any;
+    };
 }
+
+// Sort stage
+export interface OperationSortStage {
+    $sort: { [key: string]: 1 | -1 };
+}
+
+// Project stage
+export interface OperationProjectStage {
+    $project: { [key: string]: 0 | 1 | { [key: string]: any } };
+}
+
+// Limit stage
+export interface OperationLimitStage {
+    $limit: number;
+}
+
+// Skip stage
+export interface OperationSkipStage {
+    $skip: number;
+}
+
+// Unwind stage
+export interface OperationUnwindStage {
+    $unwind: string | { path: string; includeArrayIndex?: string; preserveNullAndEmptyArrays?: boolean };
+}
+
+// AddFields stage
+export interface OperationAddFieldsStage {
+    $addFields: { [key: string]: any };
+}
+
+// Count stage
+export interface OperationCountStage {
+    $count: string;
+}
+
+// Union of all aggregate stages
+export type OperationAggregateStage =
+    | OperationMatchStage
+    | OperationGroupStage
+    | OperationSortStage
+    | OperationProjectStage
+    | OperationLimitStage
+    | OperationSkipStage
+    | OperationUnwindStage
+    | OperationAddFieldsStage
+    | OperationCountStage;
+
+// Aggregate DTO - directly an array of stages
+export type OperationAggregateDto = OperationAggregateStage[];
 
 // Match stage specific types
 export interface OperationMatchQueryDto extends OperationQueryItem {
@@ -214,6 +290,7 @@ export interface OperationMatchQueryDto extends OperationQueryItem {
 export interface OperationMatchStageDto {
     $match: OperationMatchQueryDto;
 }
+
 
 // Request Options types
 export interface OperationRequestOptions {
@@ -249,7 +326,9 @@ export type OperationTypes = {
     UpdateItem: OperationUpdateItem;
     QueryItem: OperationQueryItem;
     QueryDto: OperationQueryDto;
+    FlexibleQuery: OperationFlexibleQuery;
     BulkWrite: OperationBulkWrite;
+    AggregateStage: OperationAggregateStage;
     AggregateDto: OperationAggregateDto;
     MatchStageDto: OperationMatchStageDto;
     RequestOptions: OperationRequestOptions;
