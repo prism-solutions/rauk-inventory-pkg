@@ -207,14 +207,31 @@ export interface OperationFlexibleQuery {
 // Bulk Write operation types
 export interface OperationUpdateOne {
     filter: OperationQueryDto;
-    update: OperationUpdateItem;
+    update: OperationUpdateItem; // MongoDB update operators like $set, $inc, etc.
 }
 
-export interface OperationBulkWrite {
-    updateOne?: OperationUpdateOne;
+export interface OperationInsertOne {
+    document: OperationCreateItem;
 }
 
-export type OperationBulkWriteOperations = OperationBulkWrite[];
+export interface OperationDeleteOne {
+    filter: OperationQueryDto;
+}
+
+export interface OperationReplaceOne {
+    filter: OperationQueryDto;
+    replacement: OperationCreateItem;
+}
+
+// Union type for all possible bulk operations
+export type OperationBulkOperation =
+    | { updateOne: OperationUpdateOne }
+    | { insertOne: OperationInsertOne }
+    | { deleteOne: OperationDeleteOne }
+    | { replaceOne: OperationReplaceOne };
+
+// The bulk write array
+export type OperationBulkWrite = OperationBulkOperation[];
 
 // Aggregate operation types
 
@@ -330,6 +347,11 @@ export type OperationTypes = {
     QueryDto: OperationQueryDto;
     FlexibleQuery: OperationFlexibleQuery;
     BulkWrite: OperationBulkWrite;
+    BulkOperation: OperationBulkOperation;
+    UpdateOne: OperationUpdateOne;
+    InsertOne: OperationInsertOne;
+    DeleteOne: OperationDeleteOne;
+    ReplaceOne: OperationReplaceOne;
     AggregateStage: OperationAggregateStage;
     AggregateDto: OperationAggregateDto;
     MatchStageDto: OperationMatchStageDto;

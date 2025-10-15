@@ -4,14 +4,14 @@ import type {
     OperationQueryItem,
     OperationFlexibleQuery,
     OperationBulkWrite,
+    OperationBulkOperation,
     OperationUpdateOne,
     OperationAggregateDto,
     OperationMatchStageDto,
     OperationRequestOptions,
     OperationDeleteResult,
     OperationUpdateResult,
-    OperationInsertResult,
-    OperationBulkWriteOperations
+    OperationInsertResult
 } from './types/operations';
 import type { InventoryItem } from './types/item';
 import { signRequest } from './utils/api-request';
@@ -199,19 +199,19 @@ class RaukInventory {
      * // Update one item by SKU
      * const result = await raukInventory.update(
      *   { sku: "ITEM-001" },
-     *   { packageQuantity: 20, currentLocation: { id: "warehouse-2" } }
+     *   { $set: { packageQuantity: 20, currentLocation: { id: "warehouse-2" } } }
      * );
      *
      * // Update with options
      * const result = await raukInventory.update(
      *   { entities: { factoryId: "factory-789" } },
-     *   { color: { name: "Blue" } },
+     *   { $set: { color: { name: "Blue" } } },
      *   { select: { sku: 1, color: 1 } }
      * );
      */
     public async update(
         query: OperationQueryItem,
-        update: OperationUpdateItem,
+        update: Record<string, any>,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
         const requestArray = options
@@ -261,30 +261,26 @@ class RaukInventory {
     /**
      * Bulk write operations
      * @example
-     * // Single operation
-     * const result = await raukInventory.bulkWrite({
-     *   updateOne: {
-     *     filter: { sku: "ITEM-001" },
-     *     update: { packageQuantity: 20 }
-     *   }
-     * });
-     *
-     * // Multiple operations (array)
+     * // Multiple update operations
      * const operations = [
-     *  {
-     *    updateOne: {
-     *      filter: { sku: "ITEM-001" },
-     *      update: { packageQuantity: 20 }
-     *    }
-     *  },
-     *  {
-     *    updateOne: {
+     *   {
+     *     updateOne: {
+     *       filter: { sku: "ITEM-001" },
+     *       update: { packageQuantity: 20 }
+     *     }
+     *   },
+     *   {
+     *     updateOne: {
+     *       filter: { sku: "ITEM-002" },
+     *       update: { currentLocation: { id: "warehouse-2" } }
+     *     }
+     *   }
      * ];
      * const result = await raukInventory.bulkWrite(operations, {
      *   includeDeleted: false
      * });
      */
-    public async bulkWrite(operations: OperationBulkWriteOperations, options?: OperationRequestOptions): Promise<any> {
+    public async bulkWrite(operations: OperationBulkWrite, options?: OperationRequestOptions): Promise<any> {
         const requestArray = options
             ? ["bulkWrite", operations, options]
             : ["bulkWrite", operations];
@@ -297,19 +293,19 @@ class RaukInventory {
      * // Update all items from a specific factory
      * const result = await raukInventory.updateMany(
      *   { "entities.factoryId": "factory-789" },
-     *   { currentLocation: { id: "warehouse-2" } }
+     *   { $set: { currentLocation: { id: "warehouse-2" } } }
      * );
      *
      * // Update with options
      * const result = await raukInventory.updateMany(
      *   { packageQuantity: { $lte: 10 } },
-     *   { packageQuantity: 20 },
+     *   { $set: { packageQuantity: 20 } },
      *   { select: { sku: 1, packageQuantity: 1 } }
      * );
      */
     public async updateMany(
         query: OperationQueryItem,
-        update: OperationUpdateItem,
+        update: Record<string, any>,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
         const requestArray = options
@@ -362,23 +358,25 @@ class RaukInventory {
         return this.request<OperationDeleteResult>(requestArray);
     }
 
+
     /**
      * Batch update multiple items with a simplified interface
+     * This is a wrapper around the bulkWrite method
      * @example
      * // Update multiple items in batch
      * const batchUpdates = [
-     *   [{ sku: "ITEM-001" }, { packageQuantity: 20 }],
-     *   [{ sku: "ITEM-002" }, { currentLocation: { id: "warehouse-2" } }],
-     *   [{ entities: { factoryId: "factory-789" } }, { color: { name: "Blue" } }]
+     *   [{ sku: "ITEM-001" }, { packageQuantity: 20 } ],
+     *   [{ sku: "ITEM-002" }, { currentLocation: { id: "warehouse-2" } } ],
+     *   [{ entities: { factoryId: "factory-789" } }, { color: { name: "Blue" } } ]
      * ];
      * const result = await raukInventory.updateBatch(batchUpdates);
      */
-    public async updateBatch(updates: [OperationQueryItem, OperationUpdateItem][], options?: OperationRequestOptions): Promise<any> {
+    public async updateBatch(updates: [OperationQueryItem, Record<string, any>][], options?: OperationRequestOptions): Promise<any> {
         const bulkOperations = updates.map(([query, update]) =>
         ({
             updateOne: {
                 filter: query,
-                update: { update }
+                update: update
             }
         }))
 
