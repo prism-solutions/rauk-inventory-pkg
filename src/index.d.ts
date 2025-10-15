@@ -1,10 +1,9 @@
 import type {
     OperationCreateItem,
     OperationUpdateItem,
-    OperationQueryItem,
-    OperationFlexibleQuery,
+    OperationQuery,
     OperationBulkWrite,
-    OperationAggregateDto,
+    OperationAggregatePipeline,
     OperationRequestOptions,
     OperationDeleteResult,
     OperationUpdateResult,

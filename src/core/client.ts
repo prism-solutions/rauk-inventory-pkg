@@ -1,13 +1,12 @@
 import type {
     OperationCreateItem,
     OperationUpdateItem,
-    OperationQueryItem,
-    OperationFlexibleQuery,
+    OperationQuery,
     OperationBulkWrite,
     OperationBulkOperation,
     OperationUpdateOne,
-    OperationAggregateDto,
-    OperationMatchStageDto,
+    OperationAggregatePipeline,
+    OperationMatchStage,
     OperationRequestOptions,
     OperationDeleteResult,
     OperationUpdateResult,
@@ -128,7 +127,7 @@ class RaukInventoryClient {
      *   select: { sku: 1, packageQuantity: 1, color: 1 }
      * });
      */
-    public async find(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem[]> {
+    public async find(query: OperationQuery, options?: OperationRequestOptions): Promise<InventoryItem[]> {
         const requestArray = options
             ? ["find", query, options]
             : ["find", query];
@@ -150,47 +149,11 @@ class RaukInventoryClient {
      *   select: { sku: 1, color: 1, packageQuantity: 1 }
      * });
      */
-    public async findOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem | null> {
+    public async findOne(query: OperationQuery, options?: OperationRequestOptions): Promise<InventoryItem | null> {
         const results = await this.find(query, { ...options, limit: 1 });
         return results.length > 0 ? results[0] : null;
     }
 
-    /**
-     * Find items with flexible query support (dot notation, MongoDB operators)
-     * @example
-     * // Dot notation query
-     * await raukInventory.findFlexible({ "entities.factoryId": "factory-123" });
-     *
-     * // MongoDB operators
-     * await raukInventory.findFlexible({
-     *   "packageQuantity": { $gte: 10, $lte: 100 },
-     *   "color.name": { $in: ["Red", "Blue"] }
-     * });
-     *
-     * // Complex queries with logical operators
-     * await raukInventory.findFlexible({
-     *   $or: [
-     *     { "entities.factoryId": "factory-1" },
-     *     { "entities.brandId": "brand-1" }
-     *   ]
-     * });
-     */
-    public async findFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem[]> {
-        const requestArray = options
-            ? ["find", query, options]
-            : ["find", query];
-        return this.request<InventoryItem[]>(requestArray);
-    }
-
-    /**
-     * Find a single item with flexible query support
-     * @example
-     * await raukInventory.findOneFlexible({ "entities.factoryId": "factory-123" });
-     */
-    public async findOneFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem | null> {
-        const results = await this.findFlexible(query, { ...options, limit: 1 });
-        return results.length > 0 ? results[0] : null;
-    }
 
     /**
      * Update inventory items
@@ -209,7 +172,7 @@ class RaukInventoryClient {
      * );
      */
     public async update(
-        query: OperationQueryItem,
+        query: OperationQuery,
         update: Record<string, any>,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
@@ -234,7 +197,7 @@ class RaukInventoryClient {
      *   select: { sku: 1, deleted: 1 }
      * });
      */
-    public async delete(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
+    public async delete(query: OperationQuery, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
         const requestArray = options
             ? ["findOneAndUpdate", query, { deleted: { status: true } }, options]
             : ["findOneAndUpdate", query, { deleted: { status: true } }];
@@ -250,7 +213,7 @@ class RaukInventoryClient {
      *   { $sort: { count: -1 } }
      * ]);
      */
-    public async aggregate(pipeline: OperationAggregateDto, options?: OperationRequestOptions): Promise<any[]> {
+    public async aggregate(pipeline: OperationAggregatePipeline, options?: OperationRequestOptions): Promise<any[]> {
         const requestArray = options
             ? ["aggregate", pipeline, options]
             : ["aggregate", pipeline];
@@ -303,7 +266,7 @@ class RaukInventoryClient {
      * );
      */
     public async updateMany(
-        query: OperationQueryItem,
+        query: OperationQuery,
         update: Record<string, any>,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
@@ -328,7 +291,7 @@ class RaukInventoryClient {
      *   select: { sku: 1 }
      * });
      */
-    public async deleteOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
+    public async deleteOne(query: OperationQuery, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
         const requestArray = options
             ? ["deleteOne", query, options]
             : ["deleteOne", query];
@@ -350,7 +313,7 @@ class RaukInventoryClient {
      *   select: { sku: 1, packageQuantity: 1 }
      * });
      */
-    public async deleteMany(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
+    public async deleteMany(query: OperationQuery, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
         const requestArray = options
             ? ["deleteMany", query, options]
             : ["deleteMany", query];
@@ -370,7 +333,7 @@ class RaukInventoryClient {
      * ];
      * const result = await raukInventory.updateBatch(batchUpdates);
      */
-    public async updateBatch(updates: [OperationQueryItem, Record<string, any>][], options?: OperationRequestOptions): Promise<any> {
+    public async updateBatch(updates: [OperationQuery, Record<string, any>][], options?: OperationRequestOptions): Promise<any> {
         const bulkOperations = updates.map(([query, update]) => ({
             updateOne: {
                 filter: query,

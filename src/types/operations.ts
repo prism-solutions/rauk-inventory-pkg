@@ -1,6 +1,7 @@
 // Base types with ObjectId replaced by string
-
+import { OperationQuery } from "./query";
 // Color types
+
 export interface OperationColor {
     id?: string;
     name?: string;
@@ -160,53 +161,14 @@ export interface OperationQueryAvailability {
     sold?: OperationQueryStatusDetails;
 }
 
-export interface OperationQueryItem {
-    id?: string | Record<string, any>;
-    hardcode?: string | Record<string, any>;
-    entities?: OperationQueryEntities;
-    currentLocation?: OperationQueryLocation;
-    transitTo?: OperationQueryTransitTo;
-    availability?: OperationQueryAvailability;
-    sku?: string | Record<string, any>;
-    packageQuantity?: number | Record<string, any>;
-    color?: OperationQueryColor;
-    brandDetails?: OperationQueryBrandDetails;
-    factoryDetails?: OperationQueryFactoryDetails;
-    deleted?: OperationQueryDeleted;
-    locationHistory?: OperationLocationHistoryEntry[];
-}
 
 // Query DTO types (for complex queries)
-export interface OperationQueryDto extends OperationQueryItem {
-    $and?: OperationQueryDto[];
-    $or?: OperationQueryDto[];
-    $nor?: OperationQueryDto[];
-    $not?: OperationQueryDto;
-    $in?: any[];
-    $nin?: any[];
-    $exists?: boolean;
-    $regex?: string;
-    $options?: string;
-    $gt?: any;
-    $gte?: any;
-    $lt?: any;
-    $lte?: any;
-    $ne?: any;
-    $eq?: any;
-    $size?: number;
-    $all?: any[];
-    $elemMatch?: OperationQueryDto;
-    $type?: string | number;
-}
 
-// Flexible query type that supports dot notation and any MongoDB operators
-export interface OperationFlexibleQuery {
-    [key: string]: any | OperationFlexibleQuery | OperationFlexibleQuery[];
-}
+
 
 // Bulk Write operation types
 export interface OperationUpdateOne {
-    filter: OperationQueryDto;
+    filter: OperationQuery;
     update: OperationUpdateItem; // MongoDB update operators like $set, $inc, etc.
 }
 
@@ -215,11 +177,11 @@ export interface OperationInsertOne {
 }
 
 export interface OperationDeleteOne {
-    filter: OperationQueryDto;
+    filter: OperationQuery;
 }
 
 export interface OperationReplaceOne {
-    filter: OperationQueryDto;
+    filter: OperationQuery;
     replacement: OperationCreateItem;
 }
 
@@ -234,10 +196,11 @@ export type OperationBulkOperation =
 export type OperationBulkWrite = OperationBulkOperation[];
 
 // Aggregate operation types
+export type OperationAggregatePipeline = OperationAggregateStage[];
 
 // Match stage
 export interface OperationMatchStage {
-    $match: OperationFlexibleQuery;
+    $match: OperationQuery;
 }
 
 // Group stage
@@ -295,21 +258,6 @@ export type OperationAggregateStage =
     | OperationAddFieldsStage
     | OperationCountStage;
 
-// Aggregate DTO - directly an array of stages
-export type OperationAggregateDto = OperationAggregateStage[];
-
-// Match stage specific types
-export interface OperationMatchQueryDto extends OperationQueryItem {
-    $and?: OperationMatchQueryDto[];
-    $or?: OperationMatchQueryDto[];
-    $nor?: OperationMatchQueryDto[];
-    $not?: OperationMatchQueryDto;
-}
-
-export interface OperationMatchStageDto {
-    $match: OperationMatchQueryDto;
-}
-
 
 // Request Options types
 export interface OperationRequestOptions {
@@ -338,14 +286,13 @@ export interface OperationInsertResult {
     acknowledged: boolean;
     insertedId: string;
 }
-
+export { OperationQuery } from "./query";
 // Export all operation types
 export type OperationTypes = {
     CreateItem: OperationCreateItem;
     UpdateItem: OperationUpdateItem;
-    QueryItem: OperationQueryItem;
-    QueryDto: OperationQueryDto;
-    FlexibleQuery: OperationFlexibleQuery;
+    QueryItem: OperationQuery;
+    QueryDto: OperationQuery;
     BulkWrite: OperationBulkWrite;
     BulkOperation: OperationBulkOperation;
     UpdateOne: OperationUpdateOne;
@@ -353,8 +300,7 @@ export type OperationTypes = {
     DeleteOne: OperationDeleteOne;
     ReplaceOne: OperationReplaceOne;
     AggregateStage: OperationAggregateStage;
-    AggregateDto: OperationAggregateDto;
-    MatchStageDto: OperationMatchStageDto;
+    AggregatePipeline: OperationAggregateStage[];
     RequestOptions: OperationRequestOptions;
     IncludeDeletedOnly: OperationIncludeDeletedOnly;
     DeleteResult: OperationDeleteResult;

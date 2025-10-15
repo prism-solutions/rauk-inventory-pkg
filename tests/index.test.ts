@@ -1,4 +1,4 @@
-import { RaukInventory, RaukInventoryClient, InventoryItem, OperationQueryItem, OperationCreateItem } from '../src/index';
+import { RaukInventory, RaukInventoryClient, InventoryItem, OperationCreateItem, OperationQuery } from '../src/index';
 
 describe('RaukInventory', () => {
     const config = {
@@ -33,7 +33,7 @@ describe('RaukInventory', () => {
 
     it('should find items via instance method', async () => {
         const client = new RaukInventory(config);
-        const query: OperationQueryItem = { sku: "ITEM-001" };
+        const query = { "color.name": "ITEM-001" };
         const items = await client.find(query);
         expect(items).toEqual([{ sku: "ITEM-001", packageQuantity: 10 }]);
         expect(fetch).toHaveBeenCalledWith(
@@ -47,7 +47,7 @@ describe('RaukInventory', () => {
 
     it('should find items via static method', async () => {
         new RaukInventory(config);
-        const query: OperationQueryItem = { sku: "ITEM-001" };
+        const query = { sku: "ITEM-001" };
         const items = await RaukInventory.find(query);
         expect(items).toEqual([{ sku: "ITEM-001", packageQuantity: 10 }]);
         expect(fetch).toHaveBeenCalledWith(
@@ -66,7 +66,7 @@ describe('RaukInventory', () => {
 
     it('should updateBatch via static method', async () => {
         new RaukInventory(config);
-        const updates: [OperationQueryItem, Record<string, any>][] = [
+        const updates: [OperationQuery, Record<string, any>][] = [
             [{ id: "68e7f70f8d21cb8e86067aff" }, { "color.name": "Traffic Red" }],
         ];
         jest.spyOn(global, 'fetch').mockResolvedValue({
@@ -75,6 +75,12 @@ describe('RaukInventory', () => {
         } as Response);
         const result = await RaukInventory.updateBatch(updates);
         expect(result).toEqual({ ok: true });
+    });
+
+    it('should aggregate', async () => {
+        new RaukInventory(config);
+        const aggregate = await RaukInventory.aggregate([{ $match: { "color.name": "Traffic Red" } }]);
+        expect(aggregate).toEqual([{ packageQuantity: 10, sku: "ITEM-001" }]);
     });
 });
 

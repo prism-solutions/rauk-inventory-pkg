@@ -1,9 +1,8 @@
 import type {
     OperationCreateItem,
-    OperationQueryItem,
-    OperationFlexibleQuery,
+    OperationQuery,
     OperationBulkWrite,
-    OperationAggregateDto,
+    OperationAggregatePipeline,
     OperationRequestOptions,
     OperationDeleteResult,
     OperationUpdateResult,
@@ -81,7 +80,7 @@ export class RaukInventory extends RaukInventoryClient {
      *   select: { sku: 1, packageQuantity: 1, color: 1 }
      * });
      */
-    public static async find(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem[]> {
+    public static async find(query: OperationQuery, options?: OperationRequestOptions): Promise<InventoryItem[]> {
         if (!RaukInventory.instance) {
             throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
         }
@@ -103,27 +102,12 @@ export class RaukInventory extends RaukInventoryClient {
      *   select: { sku: 1, color: 1, packageQuantity: 1 }
      * });
      */
-    public static async findOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<InventoryItem | null> {
+    public static async findOne(query: OperationQuery, options?: OperationRequestOptions): Promise<InventoryItem | null> {
         if (!RaukInventory.instance) {
             throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
         }
         return RaukInventory.instance.findOne(query, options);
     }
-
-    public static async findFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem[]> {
-        if (!RaukInventory.instance) {
-            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
-        }
-        return RaukInventory.instance.findFlexible(query, options);
-    }
-
-    public static async findOneFlexible(query: OperationFlexibleQuery, options?: OperationRequestOptions): Promise<InventoryItem | null> {
-        if (!RaukInventory.instance) {
-            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
-        }
-        return RaukInventory.instance.findOneFlexible(query, options);
-    }
-
     /**
      * Update inventory items
      * @example
@@ -141,7 +125,7 @@ export class RaukInventory extends RaukInventoryClient {
      * );
      */
     public static async update(
-        query: OperationQueryItem,
+        query: OperationQuery,
         update: Record<string, any>,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
@@ -166,7 +150,7 @@ export class RaukInventory extends RaukInventoryClient {
      *   select: { sku: 1, deleted: 1 }
      * });
      */
-    public static async delete(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
+    public static async delete(query: OperationQuery, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
         if (!RaukInventory.instance) {
             throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
         }
@@ -182,7 +166,7 @@ export class RaukInventory extends RaukInventoryClient {
      *   { $sort: { count: -1 } }
      * ]);
      */
-    public static async aggregate(pipeline: OperationAggregateDto, options?: OperationRequestOptions): Promise<any[]> {
+    public static async aggregate(pipeline: OperationAggregatePipeline, options?: OperationRequestOptions): Promise<any[]> {
         if (!RaukInventory.instance) {
             throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
         }
@@ -235,7 +219,7 @@ export class RaukInventory extends RaukInventoryClient {
      * );
      */
     public static async updateMany(
-        query: OperationQueryItem,
+        query: OperationQuery,
         update: Record<string, any>,
         options?: OperationRequestOptions
     ): Promise<OperationUpdateResult> {
@@ -260,7 +244,7 @@ export class RaukInventory extends RaukInventoryClient {
      *   select: { sku: 1 }
      * });
      */
-    public static async deleteOne(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
+    public static async deleteOne(query: OperationQuery, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
         if (!RaukInventory.instance) {
             throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
         }
@@ -282,7 +266,7 @@ export class RaukInventory extends RaukInventoryClient {
      *   select: { sku: 1, packageQuantity: 1 }
      * });
      */
-    public static async deleteMany(query: OperationQueryItem, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
+    public static async deleteMany(query: OperationQuery, options?: OperationRequestOptions): Promise<OperationDeleteResult> {
         if (!RaukInventory.instance) {
             throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
         }
@@ -301,7 +285,7 @@ export class RaukInventory extends RaukInventoryClient {
      * ];
      * const result = await raukInventory.updateBatch(batchUpdates);
      */
-    public static async updateBatch(updates: [OperationQueryItem, Record<string, any>][], options?: OperationRequestOptions): Promise<any> {
+    public static async updateBatch(updates: [OperationQuery, Record<string, any>][], options?: OperationRequestOptions): Promise<any> {
         if (!RaukInventory.instance) {
             throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
         }
