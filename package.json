@@ -1,5 +1,5 @@
 {
-  "name": "rauk-inventory",
+  "name": "@rauk/rauk-inventory",
   "version": "0.1.0",
   "description": "",
   "main": "./dist/cjs/index.js",
