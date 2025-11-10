@@ -26,10 +26,10 @@ import {
 
 class RaukInventoryClient {
 
-    protected readonly apiKeyId: string;
-    protected readonly apiSecret: string;
-    protected readonly apiPublicKey: string;
-    protected readonly apiBaseUrl: string;
+    protected apiKeyId: string;
+    protected apiSecret: string;
+    protected apiPublicKey: string;
+    protected apiBaseUrl: string;
 
     /**
     * Constructor for RaukInventory
@@ -61,6 +61,17 @@ class RaukInventoryClient {
 
     }
 
+    public setConfig(config: {
+        apiKeyId: string;
+        apiSecret: string;
+        apiPublicKey: string;
+        apiBaseUrl?: string;
+    }) {
+        this.apiKeyId = config.apiKeyId;
+        this.apiSecret = config.apiSecret;
+        this.apiPublicKey = config.apiPublicKey;
+        this.apiBaseUrl = config.apiBaseUrl || 'https://inventory.rauk.app';
+    }
     protected async request<T = any>(requestArray: any[]): Promise<T> {
         const signedRequest = signRequest({
             apiKeyId: this.apiKeyId,

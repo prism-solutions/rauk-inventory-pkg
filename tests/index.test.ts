@@ -227,6 +227,62 @@ describe('RaukInventory', () => {
             }
         }
     });
+
+    it('should update config via static setConfig method', async () => {
+        const client = new RaukInventory(config);
+
+        // Update config
+        const newConfig = {
+            apiKeyId: "new-key",
+            apiSecret: "new-secret",
+            apiPublicKey: "new-public",
+            apiBaseUrl: "https://inventory.rauk.new"
+        };
+
+        RaukInventory.setConfig(newConfig);
+
+        // Make a request to verify new config is used
+        await RaukInventory.find({ sku: "TEST" });
+
+        expect(fetch).toHaveBeenCalledWith(
+            `${newConfig.apiBaseUrl}/query`,
+            expect.objectContaining({
+                method: 'POST'
+            })
+        );
+    });
+
+    it('should update config via instance setConfig method', async () => {
+        const client = new RaukInventory(config);
+
+        // Update config via instance
+        const newConfig = {
+            apiKeyId: "updated-key",
+            apiSecret: "updated-secret",
+            apiPublicKey: "updated-public",
+            apiBaseUrl: "https://inventory.rauk.updated"
+        };
+
+        client.setConfig(newConfig);
+
+        // Make a request to verify new config is used
+        await client.find({ sku: "TEST" });
+
+        expect(fetch).toHaveBeenCalledWith(
+            `${newConfig.apiBaseUrl}/query`,
+            expect.objectContaining({
+                method: 'POST'
+            })
+        );
+    });
+
+    it('should throw on static setConfig without initialization', () => {
+        expect(() => RaukInventory.setConfig({
+            apiKeyId: "key",
+            apiSecret: "secret",
+            apiPublicKey: "public"
+        })).toThrow('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+    });
 });
 
 describe('RaukInventoryClient', () => {

@@ -50,6 +50,17 @@ export class RaukInventory extends RaukInventoryClient {
         RaukInventory.instance = this;
     }
 
+    public static setConfig(config: {
+        apiKeyId: string;
+        apiSecret: string;
+        apiPublicKey: string;
+        apiBaseUrl?: string;
+    }) {
+        if (!RaukInventory.instance) {
+            throw new Error('RaukInventory must be initialized with "new RaukInventory(config)" before calling static methods.');
+        }
+        RaukInventory.instance.setConfig(config);
+    }
     /**
      * Create a new inventory item
      * @example

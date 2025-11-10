@@ -22,6 +22,27 @@ const client = new RaukInventory({
 });
 ```
 
+### Updating Configuration
+
+You can update the API credentials after initialization using the `setConfig` method:
+
+```typescript
+// Update configuration using static method
+RaukInventory.setConfig({
+    apiKeyId: "new-api-key-id",
+    apiSecret: "new-api-secret",
+    apiPublicKey: "new-api-public-key",
+    apiBaseUrl: "https://custom-endpoint.rauk.app" // optional
+});
+
+// Or using instance method
+client.setConfig({
+    apiKeyId: "new-api-key-id",
+    apiSecret: "new-api-secret",
+    apiPublicKey: "new-api-public-key",
+});
+```
+
 ## Usage
 
 ### Static Method Usage (Singleton Pattern)
@@ -83,6 +104,7 @@ const result = await client.update({ sku: "ITEM-001" }, { $set: { packageQuantit
 ### CRUD Operations
 
 #### Create
+
 Creates a new inventory item. All required fields must be provided.
 
 ```typescript
@@ -90,6 +112,7 @@ await RaukInventory.create(item: OperationCreateItem, options?: OperationRequest
 ```
 
 **Required fields:**
+
 - `entities`: Object containing `factoryId`, `brandId`
 - `currentLocation`: Object with location details
 - `sku`: Stock keeping unit identifier
@@ -99,6 +122,7 @@ await RaukInventory.create(item: OperationCreateItem, options?: OperationRequest
 - `factoryDetails`: Object with details from the brand
 
 #### Find
+
 Retrieves multiple items based on query criteria.
 
 ```typescript
@@ -106,6 +130,7 @@ await RaukInventory.find(query: OperationQuery, options?: OperationRequestOption
 ```
 
 #### Find One
+
 Retrieves a single item based on query criteria.
 
 ```typescript
@@ -113,6 +138,7 @@ await RaukInventory.findOne(query: OperationQuery, options?: OperationRequestOpt
 ```
 
 #### Update
+
 Updates items matching the query criteria.
 
 ```typescript
@@ -120,6 +146,7 @@ await RaukInventory.update(query: OperationQuery, update: OperationUpdateItem, o
 ```
 
 #### Update Many
+
 Updates multiple items matching the query criteria.
 
 ```typescript
@@ -127,6 +154,7 @@ await RaukInventory.updateMany(query: OperationQuery, update: OperationUpdateIte
 ```
 
 #### Delete
+
 Marks items as deleted (soft delete).
 
 ```typescript
@@ -134,6 +162,7 @@ await RaukInventory.delete(query: OperationQuery, options?: OperationRequestOpti
 ```
 
 #### Delete One / Delete Many
+
 Delete operations for single or multiple items.
 
 ```typescript
@@ -144,6 +173,7 @@ await RaukInventory.deleteMany(query: OperationQuery, options?: OperationRequest
 ### Advanced Operations
 
 #### Aggregate
+
 Performs MongoDB-style aggregation operations.
 
 ```typescript
@@ -151,6 +181,7 @@ await RaukInventory.aggregate(pipeline: OperationAggregatePipeline, options?: Op
 ```
 
 **Example aggregation pipeline:**
+
 ```typescript
 const result = await RaukInventory.aggregate([
     {
@@ -165,6 +196,7 @@ const result = await RaukInventory.aggregate([
 ```
 
 #### Bulk Write
+
 Performs multiple write operations in a single request.
 
 ```typescript
@@ -172,6 +204,7 @@ await RaukInventory.bulkWrite(operations: OperationBulkWrite, options?: Operatio
 ```
 
 **Example bulk operations:**
+
 ```typescript
 const operations = [
     {
@@ -197,6 +230,7 @@ const result = await RaukInventory.bulkWrite(operations);
 ```
 
 #### Update Batch
+
 Simplified batch update interface.
 
 ```typescript
@@ -204,6 +238,7 @@ await RaukInventory.updateBatch(updates: [OperationQuery, OperationUpdateItem][]
 ```
 
 **Example:**
+
 ```typescript
 const batchUpdates = [
     [{ sku: "ITEM-001" }, { $set: { packageQuantity: 20 } }],
