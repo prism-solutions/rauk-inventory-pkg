@@ -55,7 +55,7 @@ interface LocationHistoryEntry {
 
 export interface InventoryItem {
   hardcode?: string;
-  readonlyentities: Entities;
+  readonly entities: Entities;
   currentLocation: Location;
   transitTo?: TransitTo;
   availability: Map<"produced" | "reserved" | "sold", StatusDetails>;
@@ -68,5 +68,23 @@ export interface InventoryItem {
   locationHistory?: LocationHistoryEntry[];
   createdAt?: Date;
   updatedAt?: Date;
+  readonly id: string;
+}
+
+export interface QueryInventoryItem {
+  readonly hardcode: string;
+  readonly entities: Entities;
+  readonly currentLocation: Location;
+  readonly transitTo: TransitTo;
+  readonly availability: Map<"produced" | "reserved" | "sold", StatusDetails>;
+  readonly sku: string;
+  readonly brandDetails: BrandDetails;
+  readonly packageQuantity: number;
+  readonly color: Color;
+  readonly factoryDetails: FactoryDetails;
+  readonly deleted: Deleted;
+  readonly locationHistory: LocationHistoryEntry[];
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
   readonly id: string;
 }
