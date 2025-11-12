@@ -13,14 +13,14 @@ interface Entities {
 }
 
 interface Location {
-  id?: string;
-  name?: string;
+  id?: string | null;
+  name?: string | null;
   details?: Record<string, any>;
 }
 
 interface TransitTo {
-  id?: string;
-  client?: string;
+  id?: string | null;
+  client?: string | null;
 }
 
 interface BrandDetails {
