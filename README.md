@@ -16,9 +16,9 @@ Initialize the client with your API credentials:
 import RaukInventory from "rauk-inventory";
 
 const client = new RaukInventory({
-    apiKeyId: "your-api-key-id",
-    apiSecret: "your-api-secret",
-    apiPublicKey: "your-api-public-key",
+  apiKeyId: "your-api-key-id",
+  apiSecret: "your-api-secret",
+  apiPublicKey: "your-api-public-key",
 });
 ```
 
@@ -29,17 +29,17 @@ You can update the API credentials after initialization using the `setConfig` me
 ```typescript
 // Update configuration using static method
 RaukInventory.setConfig({
-    apiKeyId: "new-api-key-id",
-    apiSecret: "new-api-secret",
-    apiPublicKey: "new-api-public-key",
-    apiBaseUrl: "https://custom-endpoint.rauk.app" // optional
+  apiKeyId: "new-api-key-id",
+  apiSecret: "new-api-secret",
+  apiPublicKey: "new-api-public-key",
+  apiBaseUrl: "https://custom-endpoint.rauk.app", // optional
 });
 
 // Or using instance method
 client.setConfig({
-    apiKeyId: "new-api-key-id",
-    apiSecret: "new-api-secret",
-    apiPublicKey: "new-api-public-key",
+  apiKeyId: "new-api-key-id",
+  apiSecret: "new-api-secret",
+  apiPublicKey: "new-api-public-key",
 });
 ```
 
@@ -52,33 +52,33 @@ After initialization, you can use static methods directly.
 ```typescript
 // Create an item
 const newItem = await RaukInventory.create({
-    entities: {
-        apiId: "item-api-123",
-        entityId: "item-entity-456",
-        factoryId: "factory-789",
-        brandId: "brand-101"
-    },
-    sku: "ITEM-001",
-    packageQuantity: 10,
-    color: { name: "Red" },
-    currentLocation: { id: "warehouse-1" }
+  entities: {
+    apiId: "item-api-123",
+    entityId: "item-entity-456",
+    factoryId: "factory-789",
+    brandId: "brand-101",
+  },
+  sku: "ITEM-001",
+  packageQuantity: 10,
+  color: { name: "Red" },
+  currentLocation: { id: "warehouse-1" },
 });
 
 // Find items
 const items = await RaukInventory.find({
-    sku: "ITEM-001"
+  sku: "ITEM-001",
 });
 
 // Update items
 const result = await RaukInventory.update(
-    { sku: "ITEM-001" },
-    { $set: { packageQuantity: 20 } }
+  { sku: "ITEM-001" },
+  { $set: { packageQuantity: 20 } }
 );
 
 // Aggregate data
 const aggregated = await RaukInventory.aggregate([
-    { $match: { "entities.factoryId": "factory-789" } },
-    { $group: { _id: "$sku", count: { $sum: 1 } } }
+  { $match: { "entities.factoryId": "factory-789" } },
+  { $group: { _id: "$sku", count: { $sum: 1 } } },
 ]);
 ```
 
@@ -88,15 +88,18 @@ You can also use instance methods:
 
 ```typescript
 const client = new RaukInventory({
-    apiKeyId: "your-api-key-id",
-    apiSecret: "your-api-secret",
-    apiPublicKey: "your-api-public-key"
+  apiKeyId: "your-api-key-id",
+  apiSecret: "your-api-secret",
+  apiPublicKey: "your-api-public-key",
 });
 
 // Use instance methods
 const items = await client.find({ sku: "ITEM-001" });
 const item = await client.findOne({ sku: "ITEM-001" });
-const result = await client.update({ sku: "ITEM-001" }, { $set: { packageQuantity: 20 } });
+const result = await client.update(
+  { sku: "ITEM-001" },
+  { $set: { packageQuantity: 20 } }
+);
 ```
 
 ## API Reference
@@ -170,6 +173,151 @@ await RaukInventory.deleteOne(query: OperationQuery, options?: OperationRequestO
 await RaukInventory.deleteMany(query: OperationQuery, options?: OperationRequestOptions): Promise<OperationDeleteResult>
 ```
 
+### Inventory Item Schema
+
+The SDK operates on inventory items with the following comprehensive schema:
+
+#### Core Fields
+
+- **`id`** (readonly string): Unique identifier for the inventory item
+- **`entities`** (readonly object): Immutable entity relationships
+  - `apiId`: API identifier for the item
+  - `entityId`: Entity identifier
+  - `factoryId`: Factory/manufacturer identifier
+  - `brandId`: Brand identifier
+- **`sku`** (string): Stock Keeping Unit identifier
+- **`packageQuantity`** (number): Number of items in this package/unit
+- **`color`** (object): Color information
+  - `id?`: Optional color identifier
+  - `name`: Color name (required)
+
+#### Location & Movement
+
+- **`currentLocation`** (object): Current physical location of the item
+  - `id?`: Location identifier
+  - `name?`: Location name
+  - `details?`: Additional location metadata
+- **`transitTo?`** (object): Destination information if item is in transit
+  - `id?`: Destination location identifier
+  - `client?`: Client/recipient information
+- **`locationHistory?`** (array): Historical location changes
+  - `id`: Location identifier
+  - `name`: Location name
+  - `date`: When the location change occurred
+
+#### Availability & Status
+
+- **`availability`** (Map<"produced" | "reserved" | "sold", StatusDetails>): Item availability status by type
+  - Key: Status type - one of: `"produced"`, `"reserved"`, or `"sold"`
+  - Value: Status details object containing:
+    - `orderId?`: Associated order identifier
+    - `date?`: Status assignment date
+    - `temporary?`: Whether the status is temporary
+    - `expiration?`: When temporary status expires
+
+#### Business Details
+
+- **`brandDetails?`** (object): Brand/manufacturer information
+  - `id?`: Brand identifier
+  - `name?`: Brand name
+  - `type?`: Brand type classification
+  - `subType?`: Brand subtype classification
+- **`factoryDetails?`** (object): Manufacturing facility information
+  - `id?`: Factory identifier
+  - `name?`: Factory name
+  - `type?`: Factory type classification
+  - `subType?`: Factory subtype classification
+
+#### System Fields
+
+- **`hardcode?`** (string): Optional hardcoded identifier or reference
+- **`deleted`** (object): Soft deletion status
+  - `status`: Whether the item is deleted (boolean)
+  - `deletionDate?`: When the item was deleted
+- **`createdAt?`** (Date): Record creation timestamp
+- **`updatedAt?`** (Date): Last update timestamp
+
+#### Complete Item Example
+
+Here's a complete example of an inventory item with all fields populated:
+
+```javascript
+const sampleInventoryItem = {
+  id: "inv-12345-abcde",
+  entities: {
+    apiId: "api-789",
+    entityId: "ent-456",
+    factoryId: "factory-001",
+    brandId: "brand-999",
+  },
+  sku: "RED-SHOES-42",
+  packageQuantity: 12,
+  color: {
+    id: "color-red-001",
+    name: "Crimson Red",
+  },
+  currentLocation: {
+    id: "warehouse-nyc",
+    name: "New York Warehouse",
+    details: {
+      aisle: "A12",
+      shelf: "S05",
+      bin: "B03",
+    },
+  },
+  transitTo: {
+    id: "store-la-001",
+    client: "Los Angeles Store",
+  },
+  availability: new Map([
+    [
+      "produced",
+      {
+        date: new Date("2024-01-15T10:00:00Z"),
+      },
+    ],
+    [
+      "reserved",
+      {
+        orderId: "order-xyz-789",
+        date: new Date("2024-01-20T14:30:00Z"),
+        temporary: true,
+        expiration: new Date("2024-01-25T14:30:00Z"),
+      },
+    ],
+  ]),
+  brandDetails: {
+    id: "brand-999",
+    name: "Premium Footwear Co",
+    type: "Fashion",
+    subType: "Athletic",
+  },
+  factoryDetails: {
+    id: "factory-001",
+    name: "Global Manufacturing Inc",
+    type: "Production",
+    subType: "Assembly",
+  },
+  deleted: {
+    status: false,
+  },
+  locationHistory: [
+    {
+      id: "factory-001",
+      name: "Manufacturing Plant",
+      date: new Date("2024-01-01T08:00:00Z"),
+    },
+    {
+      id: "warehouse-nyc",
+      name: "New York Warehouse",
+      date: new Date("2024-01-10T09:15:00Z"),
+    },
+  ],
+  createdAt: new Date("2024-01-01T08:00:00Z"),
+  updatedAt: new Date("2024-01-20T14:30:00Z"),
+};
+```
+
 ### Advanced Operations
 
 #### Aggregate
@@ -184,14 +332,14 @@ await RaukInventory.aggregate(pipeline: OperationAggregatePipeline, options?: Op
 
 ```typescript
 const result = await RaukInventory.aggregate([
-    {
-        $group: {
-            _id: "$sku",
-            count: { $sum: 1 },
-            totalQuantity: { $sum: "$packageQuantity" }
-        }
+  {
+    $group: {
+      _id: "$sku",
+      count: { $sum: 1 },
+      totalQuantity: { $sum: "$packageQuantity" },
     },
-    { $sort: { count: -1 } }
+  },
+  { $sort: { count: -1 } },
 ]);
 ```
 
@@ -207,23 +355,28 @@ await RaukInventory.bulkWrite(operations: OperationBulkWrite, options?: Operatio
 
 ```typescript
 const operations = [
-    {
-        updateOne: {
-            filter: { sku: "ITEM-001" },
-            update: { $set: { packageQuantity: 20 } }
-        }
+  {
+    updateOne: {
+      filter: { sku: "ITEM-001" },
+      update: { $set: { packageQuantity: 20 } },
     },
-    {
-        insertOne: {
-            document: {
-                entities: { apiId: "123", entityId: "456", factoryId: "789", brandId: "101" },
-                sku: "ITEM-003",
-                packageQuantity: 5,
-                color: { name: "Blue" },
-                currentLocation: { id: "warehouse-2" }
-            }
-        }
-    }
+  },
+  {
+    insertOne: {
+      document: {
+        entities: {
+          apiId: "123",
+          entityId: "456",
+          factoryId: "789",
+          brandId: "101",
+        },
+        sku: "ITEM-003",
+        packageQuantity: 5,
+        color: { name: "Blue" },
+        currentLocation: { id: "warehouse-2" },
+      },
+    },
+  },
 ];
 
 const result = await RaukInventory.bulkWrite(operations);
@@ -241,8 +394,8 @@ await RaukInventory.updateBatch(updates: [OperationQuery, OperationUpdateItem][]
 
 ```typescript
 const batchUpdates = [
-    [{ sku: "ITEM-001" }, { $set: { packageQuantity: 20 } }],
-    [{ sku: "ITEM-002" }, { $set: { color: { name: "Blue" } } }]
+  [{ sku: "ITEM-001" }, { $set: { packageQuantity: 20 } }],
+  [{ sku: "ITEM-002" }, { $set: { color: { name: "Blue" } } }],
 ];
 
 const result = await RaukInventory.updateBatch(batchUpdates);
@@ -254,10 +407,10 @@ All query operations support optional parameters:
 
 ```typescript
 interface OperationRequestOptions {
-    select?: Record<string, 0 | 1>;      // Field selection
-    limit?: number;                       // Limit results
-    sort?: Record<string, 1 | -1>;       // Sort order
-    includeDeleted?: boolean;             // Include soft-deleted items
+  select?: Record<string, 0 | 1>; // Field selection
+  limit?: number; // Limit results
+  sort?: Record<string, 1 | -1>; // Sort order
+  includeDeleted?: boolean; // Include soft-deleted items
 }
 ```
 
@@ -285,37 +438,37 @@ The SDK provides structured error handling with specific error types for differe
 
 ```typescript
 import {
-    isValidationError,
-    isAuthenticationError,
-    isNetworkError,
-    RaukValidationError
-} from 'rauk-inventory';
+  isValidationError,
+  isAuthenticationError,
+  isNetworkError,
+  RaukValidationError,
+} from "rauk-inventory";
 
 // Handle errors with proper typing
 try {
-    const items = await RaukInventory.find({ sku: "ITEM-001" });
+  const items = await RaukInventory.find({ sku: "ITEM-001" });
 } catch (error) {
-    if (isValidationError(error)) {
-        // Access detailed validation errors
-        console.log("Validation failed for properties:", error.validationErrors);
-        console.log("All error messages:", error.getAllMessages());
+  if (isValidationError(error)) {
+    // Access detailed validation errors
+    console.log("Validation failed for properties:", error.validationErrors);
+    console.log("All error messages:", error.getAllMessages());
 
-        // Get errors for specific property
-        const brandErrors = error.getErrorsForProperty("brandDetails");
-        console.log("Brand errors:", brandErrors);
-    } else if (isAuthenticationError(error)) {
-        console.log("Authentication failed:", error.message);
-    } else if (isNetworkError(error)) {
-        console.log("Network error:", error.message);
-    } else {
-        console.log("Other error:", error.message);
-    }
+    // Get errors for specific property
+    const brandErrors = error.getErrorsForProperty("brandDetails");
+    console.log("Brand errors:", brandErrors);
+  } else if (isAuthenticationError(error)) {
+    console.log("Authentication failed:", error.message);
+  } else if (isNetworkError(error)) {
+    console.log("Network error:", error.message);
+  } else {
+    console.log("Other error:", error.message);
+  }
 
-    // Access common error properties
-    console.log("Status code:", error.statusCode);
-    console.log("Request ID:", error.requestId);
-    console.log("Timestamp:", error.timestamp);
-    console.log("Original API response:", error.originalError);
+  // Access common error properties
+  console.log("Status code:", error.statusCode);
+  console.log("Request ID:", error.requestId);
+  console.log("Timestamp:", error.timestamp);
+  console.log("Original API response:", error.originalError);
 }
 ```
 
